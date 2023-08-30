@@ -10,6 +10,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::ffi::Py_uintptr_t;
 use pyo3::prelude::*;
 use pyo3::Python;
+use arrow2::array::{ListArray, StructArray};
 
 use crate::error::{IntoPyErr, IntoPyResult};
 
@@ -80,7 +81,22 @@ pub(crate) fn pyarray_to_boxed(obj: &PyAny) -> PyResult<Box<dyn Array>> {
         ffi::import_array_from_c(*array, field.data_type).into_pyresult()?
     };
     Ok(array)
+    
 }
+
+
+pub(crate) fn pyarray_to_latlngarray(obj: &PyAny) -> PyResult<StructArray> {
+    let arr = pyarray_to_native::<StructArray>(obj)?;
+    let fields = arr.fields();
+    if fields.len() != 2 {
+        return Err(PyValueError::new_err(
+            "Expected StructArray with 2 fields: lat and lng",
+        ));
+    }
+    return Ok(arr);
+
+}
+
 
 pub(crate) fn pyarray_to_native<T: Any + Array + Clone>(obj: &PyAny) -> PyResult<T> {
     let array = pyarray_to_boxed(obj)?;

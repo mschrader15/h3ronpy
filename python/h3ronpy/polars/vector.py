@@ -12,6 +12,7 @@ directededges_to_wkb_lines = _wrap(_av.directededges_to_wkb_lines, ret_type=pl.S
 directededges_to_wkb_linestrings = _wrap(_av.directededges_to_wkb_linestrings, ret_type=pl.Series)
 wkb_to_cells = _wrap(_av.wkb_to_cells, ret_type=pl.Series)
 geometry_to_cells = _wrap(_av.geometry_to_cells, ret_type=pl.Series)
+latlng_to_cells = _wrap(_av.latlng_to_cells, ret_type=pl.Series)
 
 __all__ = [
     cells_to_coordinates.__name__,
@@ -24,4 +25,5 @@ __all__ = [
     directededges_to_wkb_linestrings.__name__,
     wkb_to_cells.__name__,
     geometry_to_cells.__name__,
+    latlng_to_cells.__name__,
 ]

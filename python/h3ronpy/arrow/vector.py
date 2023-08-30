@@ -133,6 +133,11 @@ def geometry_to_cells(geom, resolution: int, compact: bool = False, all_intersec
     return vector.geometry_to_cells(geom, resolution, compact=compact, all_intersecting=all_intersecting)
 
 
+def latlng_to_cells(latlng, resolution: int) -> pa.Array:
+    
+    return vector.latlng_to_cells(latlng, resolution)
+    
+
 __all__ = [
     cells_to_coordinates.__name__,
     cells_bounds.__name__,
@@ -144,4 +149,5 @@ __all__ = [
     directededges_to_wkb_lines.__name__,
     wkb_to_cells.__name__,
     geometry_to_cells.__name__,
+    latlng_to_cells.__name__,
 ]

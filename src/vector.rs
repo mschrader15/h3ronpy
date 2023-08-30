@@ -1,16 +1,21 @@
+use std::ops::Deref;
+
 use geo::BoundingRect;
 use h3arrow::algorithm::ToCoordinatesOp;
 use h3arrow::array::from_geo::{ToCellIndexArray, ToCellListArray, ToCellsOptions};
 use h3arrow::array::to_geoarrow::{ToWKBLineStrings, ToWKBLines, ToWKBPoints, ToWKBPolygons};
-use h3arrow::array::CellIndexArray;
+use h3arrow::array::{CellIndexArray, H3IndexArrayValue};
 use h3arrow::export::arrow2::array::{BinaryArray, Float64Array, ListArray};
 use h3arrow::export::arrow2::bitmap::Bitmap;
+use h3arrow::export::geoarrow::array::PointArray;
 use h3arrow::export::geoarrow::{array::WKBArray, GeometryArrayTrait};
 use h3arrow::export::h3o::geom::ToGeo;
 use h3arrow::export::h3o::Resolution;
 use itertools::multizip;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
+use h3o::{CellIndex, VertexIndex, DirectedEdgeIndex, LatLng};
+use rayon::prelude::*;
 
 use crate::arrow_interop::*;
 use crate::error::IntoPyResult;
@@ -248,6 +253,39 @@ pub(crate) fn geometry_to_cells(
     with_pyarrow(|py, pyarrow| h3array_to_pyarray(cellindexarray, py, pyarrow))
 }
 
+#[pyfunction]
+#[pyo3(signature = (array, resolution))]
+pub(crate) fn latlng_to_cells(
+    array: &PyAny,
+    resolution: u8,
+) -> PyResult<PyObject> {
+    let h3resolution = h3o::Resolution::try_from(resolution).unwrap();
+    let latlngarray = pyarray_to_latlngarray(array)?;
+    let (field, data, _) = latlngarray.into_data();
+    assert!(&field.get(0).unwrap().name == "lat");
+    assert!(&field.get(1).unwrap().name == "lon");
+
+    let lat = data.get(0).unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
+    let lng = data.get(1).unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
+    
+    let latlngarray = multizip((lat.iter(), lng.iter())).map(|(lat, lng)| {
+        return [lat, lng]
+    }).collect::<Vec<[Option<&f64>; 2]>>();
+
+    let cellindexarray = latlngarray.iter().map(
+        |latlng| {
+            let latlng = LatLng::new(*latlng[0].unwrap(), *latlng[1].unwrap()).unwrap();
+            let cell: u64 = latlng.to_cell(h3resolution).try_into().unwrap();
+            return cell;
+        }
+    ).collect::<Vec<u64>>();
+
+    let cellindexarray = CellIndexArray::try_from(cellindexarray).unwrap();
+
+    with_pyarrow(|py, pyarrow| h3array_to_pyarray(cellindexarray, py, pyarrow))
+}
+
+
 pub fn init_vector_submodule(m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(cells_to_coordinates, m)?)?;
     m.add_function(wrap_pyfunction!(cells_bounds, m)?)?;
@@ -259,5 +297,6 @@ pub fn init_vector_submodule(m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(directededges_to_wkb_lines, m)?)?;
     m.add_function(wrap_pyfunction!(wkb_to_cells, m)?)?;
     m.add_function(wrap_pyfunction!(geometry_to_cells, m)?)?;
+    m.add_function(wrap_pyfunction!(latlng_to_cells, m)?)?;
     Ok(())
 }

@@ -29,7 +29,8 @@ rayon = "^1.5"
 hashbrown = "0.14"
 geo = "0.26"
 itertools = "0.11"
-
+arrow2 = { version = "0.17"}
+h3o = "0.4.0"
 
 [profile.release]
 lto = "thin"

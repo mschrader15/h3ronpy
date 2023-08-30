@@ -2,8 +2,7 @@ use h3arrow::array::{FromIteratorWithValidity, H3Array, H3IndexArrayValue};
 use h3arrow::export::arrow2::array::{BooleanArray, PrimitiveArray};
 use h3arrow::export::arrow2::bitmap::{Bitmap, MutableBitmap};
 use h3arrow::export::arrow2::datatypes::DataType;
-use h3arrow::h3o;
-use h3o::{CellIndex, DirectedEdgeIndex, VertexIndex};
+use h3arrow::h3o::{CellIndex, DirectedEdgeIndex, VertexIndex};
 use pyo3::prelude::*;
 
 use crate::arrow_interop::*;
