@@ -268,17 +268,11 @@ pub(crate) fn latlng_to_cells(
     let lat = data.get(0).unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
     let lng = data.get(1).unwrap().as_any().downcast_ref::<Float64Array>().unwrap();
     
-    let latlngarray = multizip((lat.iter(), lng.iter())).map(|(lat, lng)| {
-        return [lat, lng]
-    }).collect::<Vec<[Option<&f64>; 2]>>();
-
-    let cellindexarray = latlngarray.iter().map(
-        |latlng| {
-            let latlng = LatLng::new(*latlng[0].unwrap(), *latlng[1].unwrap()).unwrap();
-            let cell: u64 = latlng.to_cell(h3resolution).try_into().unwrap();
-            return cell;
-        }
-    ).collect::<Vec<u64>>();
+    let cellindexarray = multizip((lat.iter(), lng.iter())).map(|(lat, lon)| {
+        let latlng = LatLng::new(*lat.unwrap(), *lon.unwrap()).unwrap();
+        let cell: u64 = latlng.to_cell(h3resolution).try_into().unwrap();
+        return cell;
+    }).collect::<Vec<u64>>();
 
     let cellindexarray = CellIndexArray::try_from(cellindexarray).unwrap();
 
